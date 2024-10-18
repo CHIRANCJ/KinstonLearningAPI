@@ -1,0 +1,6 @@
+@KinstonUniAPI_HostAddress = http://localhost:5116
+
+GET {{KinstonUniAPI_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
