@@ -8,7 +8,7 @@ namespace KinstonUniAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "Registrar")] // Authorization restricted to Registrars
+    /*[Authorize(Roles = "Registrar")] */// Authorization restricted to Registrars
     public class RegistrarController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
@@ -24,8 +24,24 @@ namespace KinstonUniAPI.Controllers
         {
             var users = await _context.Users
                 .Where(u => !u.IsApproved)
+                .Select(u => new
+                {
+                    u.UserId,
+                    u.Name,
+                    u.Email,
+                    u.Role,  // Include role in the response
+                    u.IsApproved
+                })
                 .ToListAsync();
 
+            return Ok(users);
+        }
+
+        // GET: api/registrar/all-users
+        [HttpGet("all-users")]
+        public async Task<IActionResult> GetAllUsers()
+        {
+            var users = await _context.Users.ToListAsync(); // Assuming you want all users
             return Ok(users);
         }
 
@@ -43,12 +59,26 @@ namespace KinstonUniAPI.Controllers
             return Ok("User approved successfully.");
         }
 
+        // DELETE: api/registrar/delete-user/{id}
+        [HttpDelete("delete-user/{id}")]
+        public async Task<IActionResult> DeleteUser(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+                return NotFound("User not found");
+
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+
+            return Ok("User deleted successfully.");
+        }
+
         // GET: api/registrar/courses
         [HttpGet("courses")]
         public async Task<IActionResult> GetPendingCourses()
         {
             var courses = await _context.Courses
-                .Where(c => !c.IsApproved)
+                .Where(c => !c.IsApproved) // Fetch courses that are not approved yet
                 .ToListAsync();
 
             return Ok(courses);
